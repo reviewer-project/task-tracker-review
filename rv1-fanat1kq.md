@@ -4,7 +4,7 @@
 
 ## 1. Безопасность
 
-### 1.1. Gateway не выполняет свою основную функцию (MEDIUM)
+### 1.1. Gateway не выполняет свою основную функцию
 ```java
 // SecurityConfig.java (gateway)
 .authorizeExchange(exchanges -> exchanges
@@ -53,7 +53,7 @@ Gateway пропускает все запросы без проверки, а �
 ```
 Тогда микросервисы могут доверять заголовку от Gateway и не проверять JWT повторно.
 
-### 1.2. RSA ключи генерируются при каждом запуске (HIGH)
+### 1.2. RSA ключи генерируются при каждом запуске
 ```java
 // SecurityConfig.java (auth-service)
 private static KeyPair generateRsaKey() throws NoSuchAlgorithmException {
@@ -68,7 +68,7 @@ private static KeyPair generateRsaKey() throws NoSuchAlgorithmException {
 
 **Рекомендация:** Хранить ключи в файле или использовать Key Management Service.
 
-### 1.3. Hardcoded client secret (MEDIUM)
+### 1.3. Hardcoded client secret
 ```java
 // SecurityConfig.java (auth-service)
 .clientSecret("{noop}gateway-secret")
@@ -77,7 +77,7 @@ Client secret для OAuth2 клиента захардкожен в коде с
 
 **Рекомендация:** Вынести в конфигурацию и использовать BCrypt для хранения.
 
-### 1.4. Endpoint /api/auth/users возвращает всех пользователей (MEDIUM)
+### 1.4. Endpoint /api/auth/users возвращает всех пользователей
 ```java
 // AuthController.java
 @GetMapping("/users")
@@ -89,7 +89,7 @@ Endpoint доступен без авторизации (см. 1.2) и возв�
 
 **Рекомендация:** Защитить endpoint и ограничить доступ только для администраторов или внутренних сервисов.
 
-### 1.5. Ошибки валидации возвращают Internal Server Error (HIGH)
+### 1.5. Ошибки валидации возвращают Internal Server Error
 ```java
 // AuthControllerAdvice.java
 import org.springframework.messaging.handler.annotation.support.MethodArgumentNotValidException;
@@ -120,7 +120,7 @@ public ResponseEntity<ErrorResponse> handleValidationErrors(
 }
 ```
 
-### 1.6. RuntimeException вместо кастомных исключений (MEDIUM)
+### 1.6. RuntimeException вместо кастомных исключений
 ```java
 // UserService.java
 User user = userRepository.findUserByUsername(request.username())
@@ -136,7 +136,7 @@ Task task = taskRepository.findById(taskId).orElseThrow(
 
 ## 2. Логические ошибки
 
-### 2.1. Отсутствует проверка владельца задачи при операциях (HIGH)
+### 2.1. Отсутствует проверка владельца задачи при операциях
 ```java
 // TaskController.java
 @DeleteMapping("/{taskId}")
@@ -154,7 +154,7 @@ public void updateStatusById(@PathVariable Long taskId,
 
 **Рекомендация:** Добавить проверку `task.getUserId().equals(currentUserId)` перед операциями.
 
-### 2.2. getTasks() возвращает ВСЕ задачи (HIGH)
+### 2.2. getTasks() возвращает ВСЕ задачи
 ```java
 // TaskService.java
 @Transactional(readOnly = true)
@@ -180,7 +180,7 @@ public Page<TaskDto> getTasks(Long userId, Pageable pageable) {
 }
 ```
 
-### 2.3. Несоответствие типа userId в Entity (MEDIUM)
+### 2.3. Несоответствие типа userId в Entity
 ```java
 // Task.java
 @Column(nullable = false, columnDefinition = "UUID")
@@ -190,7 +190,7 @@ private Long userId;
 
 **Рекомендация:** Использовать либо `Long` с `BIGINT`, либо `UUID` с соответствующим типом Java.
 
-### 2.4. @PostMapping на методе сервиса (LOW)
+### 2.4. @PostMapping на методе сервиса
 ```java
 // TaskService.java
 @PostMapping("/task/info")  // Аннотация контроллера на методе сервиса!
@@ -203,7 +203,7 @@ public void getAllTasksInfo(Long userId) {
 
 **Рекомендация:** Удалить аннотацию.
 
-### 2.5. Hardcoded IP в email шаблоне (MEDIUM)
+### 2.5. Hardcoded IP в email шаблоне
 ```html
 <!-- welcome.html -->
 <a href="http://176.109.106.218:3001/" class="cta-button" target="_blank">
@@ -214,7 +214,7 @@ IP адрес захардкожен в шаблоне письма.
 
 **Рекомендация:** Использовать переменную из конфигурации.
 
-### 2.6. Hardcoded роль ADMIN для всех пользователей (MEDIUM)
+### 2.6. Hardcoded роль ADMIN для всех пользователей
 ```java
 // UserMapper.java
 @Mapping(target = "role", constant = "ADMIN")
@@ -226,7 +226,7 @@ AuthResponse toAuthResponse(String jwtToken, User user);
 
 ## 3. Архитектурные проблемы
 
-### 3.1. Отсутствует валидация входных данных в task-service (HIGH)
+### 3.1. Отсутствует валидация входных данных в task-service
 ```java
 // TaskRequestDto.java
 @Data
@@ -250,7 +250,7 @@ private String title;
 private Long userId;
 ```
 
-### 3.2. Нет @Validated на TaskController (MEDIUM)
+### 3.2. Нет @Validated на TaskController
 ```java
 // TaskController.java
 @RestController
@@ -263,7 +263,7 @@ public class TaskController {
 
 ## 4. Проблемы с Kafka
 
-### 4.1. Генерация messageId через hashCode (MEDIUM)
+### 4.1. Генерация messageId через hashCode
 ```java
 // DataPublisher.java
 private Long generateNotificationId(Notification dto) {
@@ -274,7 +274,7 @@ private Long generateNotificationId(Notification dto) {
 
 **Рекомендация:** Использовать UUID или последовательный ID из базы данных.
 
-### 4.2. Retry логика дублируется на producer и consumer (MEDIUM)
+### 4.2. Retry логика дублируется на producer и consumer
 
 Retry реализован **дважды** — и на стороне отправителя, и на стороне получателя:
 
@@ -344,7 +344,7 @@ Producer-side retry имеет смысл оставить только для �
 
 ## 5. Проблемы с Docker
 
-### 5.1. Frontend не использует nginx для production (MEDIUM)
+### 5.1. Frontend не использует nginx для production
 ```dockerfile
 # Dockerfile (tracker-front)
 RUN npm install -g serve
@@ -364,12 +364,12 @@ COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/nginx.conf
 ```
 
-### 5.2. Нет healthcheck для сервисов (MEDIUM)
+### 5.2. Нет healthcheck для сервисов
 В docker-compose только postgres имеет healthcheck. Остальные сервисы могут запускаться до готовности зависимостей.
 
 **Рекомендация:** Добавить healthcheck и depends_on с condition.
 
-### 5.3. Нет ограничений ресурсов (LOW)
+### 5.3. Нет ограничений ресурсов
 ```yaml
 services:
   task-service:
@@ -631,7 +631,7 @@ private String parseDebeziumPayload(String json) {
 
 ## frontend/
 
-### 12. Авторизация слетает при перезагрузке страницы (HIGH)
+### 12. Авторизация слетает при перезагрузке страницы
 ```javascript
 // App.jsx
 const checkAuthentication = async () => {
@@ -769,4 +769,3 @@ tracket-auth-service  // Должно быть tracker-auth-service
 log.info("Cообщение отправлено на почту");
 ```
 Смешение русского и английского языков в логах. Рекомендуется использовать единый язык (предпочтительно английский).
-
